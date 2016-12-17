@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import sys, pygame, random
 """-----------------------------------------------------------------"""
 def setupHangmanGlobals():   
