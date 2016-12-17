@@ -1,23 +1,23 @@
 import sys, pygame, random
 """-----------------------------------------------------------------"""
-def setupGlobals():   
+def setupHangmanGlobals():   
 
-    global g_TRIES
-    g_TRIES = 6 #how many tries the player gets to guess the word
+    global g_TRIES #how many tries the player gets to guess the word
+    g_TRIES = 6 
 
-    global g_DICT_WORD
-    g_DICT_WORD = list(random.choice(LINES)) #select random word ALSO needed for 'game over' 
+    global g_DICT_WORD #select random word ALSO needed for 'game over'
+    g_DICT_WORD = list(random.choice(LINES))  
 
-    global g_GUESSED_WORD
+    global g_GUESSED_WORD #word the player sees
     g_GUESSED_WORD = []
     for i in range(0, len(g_DICT_WORD)):
-        g_GUESSED_WORD.append('*') #word the player sees
+        g_GUESSED_WORD.append('*') 
 
-    global g_GUESSES_LIST
-    g_GUESSES_LIST = [] #the incorrect guesses
+    global g_GUESSES_LIST #the incorrect guesses
+    g_GUESSES_LIST = [] 
 
-    global g_NUM_OF_BAD_GUESSES
-    g_NUM_OF_BAD_GUESSES = 0 #counter for num of incorrect guesses
+    global g_NUM_OF_BAD_GUESSES #counter for num of incorrect guesses
+    g_NUM_OF_BAD_GUESSES = 0 
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
@@ -26,32 +26,51 @@ def preGameSetup():
     pygame.init()
     pygame.font.init()
 
-    #loadWords() **uncomment this
+    loadWords()
 
     size = (800, 600)
     
-    global g_white
+    global g_white #color definition for "white"
     g_white = (255, 255, 255)
 
-    global g_black
+    global g_black #color definition for "black"
     g_black = (0, 0, 0)
 
-    global g_screen
+    global g_screen #screen that will have things rendered to it
     g_screen = pygame.display.set_mode(size)
 
     pygame.display.set_caption("Hangman")
 
-    global g_comicSansFont
+    global g_comicSansFont #main font for the screen text
     g_comicSansFont = pygame.font.SysFont("Comic Sans MS", 30)
 
-    #greetingString = g_comicSansFont.render("Hello, and welcome to 'Python Hangman'!", 1, g_black)
-    #enterString = g_comicSansFont.render("Press ENTER to continue...", 1, g_black)
-    
-    global g_playFlag
-    g_playFlag = False
+    global g_screenText #helper that renders certain text to the screen when needed
+    g_screenText = {"greeting" :  g_comicSansFont.render, "enter" : g_comicSansFont.render, "word selected" : g_comicSansFont.render, 
+                    "word to guess" : g_comicSansFont.render, "wrong letters" : g_comicSansFont.render, "guess letter" : g_comicSansFont.render,
+                    "win message" : g_comicSansFont.render, "lose message" : g_comicSansFont.render, "play again" : g_comicSansFont.render,}
+"""-----------------------------------------------------------------"""
 
-    global g_screenText
-    g_screenText = {"greeting" :  g_comicSansFont.render, "enter" : g_comicSansFont.render, "JUST_A_TEST" : g_comicSansFont.render,}
+"""-----------------------------------------------------------------"""
+def setFlags(firstTime):
+    global g_welcomeFlag #puts player at welcomeStage()
+    global g_playFlag #puts player at gameSetupStage()
+
+    if firstTime:
+        g_welcomeFlag = True
+        g_playFlag = False
+
+    else:
+        g_welcomeFlag = False
+        g_playFlag = True
+    
+    global g_setupGameGlobalsFlag #only done once during gameSetupStage() to initialize all the hangman global variables
+    g_setupGameGlobalsFlag = True
+
+    global g_hangmanFlag #puts player at hangmanStage()
+    g_hangmanFlag = False
+
+    global g_playAgainFlag
+    g_playAgainFlag = False
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
@@ -65,8 +84,31 @@ def loadWords():
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
+def gameSetupStage(event):
+    global g_playFlag
+    global g_hangmanFlag
+    global g_setupGameGlobalsFlag
+
+    if g_setupGameGlobalsFlag: #only want this to happen at start of every game
+        setupHangmanGlobals()
+
+    g_setupGameGlobalsFlag = False
+
+    g_screen.blit(g_screenText["word selected"]("A random word has been selected...", 1, g_black),(100,100))
+    g_screen.blit(g_screenText["enter"]("Press SPACE to continue...", 1, g_black),(100,150))
+
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_SPACE:
+            print("Inside 2nd event")
+            g_playFlag = False
+            g_hangmanFlag = True
+
+"""-----------------------------------------------------------------"""
+
+"""-----------------------------------------------------------------"""
 def welcomeStage(currentTime, event):
     global g_playFlag
+    global g_welcomeFlag
 
     if currentTime <= 5000:
         g_screen.blit(g_screenText["greeting"]("Hello, and welcome to 'Python Hangman'!", 1, g_black),(100,100))
@@ -76,15 +118,49 @@ def welcomeStage(currentTime, event):
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_RETURN:
+            print("Inside event")
+            g_welcomeFlag = False
             g_playFlag = True
+"""-----------------------------------------------------------------"""
+
+"""-----------------------------------------------------------------"""
+def hangmanStage(event):
+
+    printGuessedWord()
+    printWrongGuesses() 
+    #printHangman() **Uncomment this 
+
+    if g_GUESSED_WORD == g_DICT_WORD:
+        clearScreen()
+        #printGuessedWord() **not sure if I'll keep
+        #printWrongGuesses() **not sure if I'll keep
+        doGameWon(event)
+        #deleted "play = "
+        #break   
+    elif g_NUM_OF_BAD_GUESSES == g_TRIES:
+        clearScreen()
+        printGuessedWord()
+        printWrongGuesses()
+        doGameOver(event)
+        #deleted "play = "       
+        #break
+    else:
+        promptForLetter()
+
+        if event.type == pygame.KEYDOWN:
+
+            if event.unicode.isalpha():
+
+                letter = pygame.key.name(event.key)
+        
+                checkLetter(letter)
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
 def main():
     
     preGameSetup()    
-
-    #displayWelcome = True
+    setFlags(True)
 
     while 1:
         
@@ -95,12 +171,21 @@ def main():
 
         clearScreen()
 
-        if not g_playFlag:
+        if g_welcomeFlag: #welcome screen
             welcomeStage(currentTime, event)
 
-        elif g_playFlag:
+        elif g_playFlag: #setup game screen
             clearScreen()
+            gameSetupStage(event)
 
+        elif g_hangmanFlag: #main game screen
+            clearScreen()
+            hangmanStage(event)
+
+        elif g_playAgainFlag: #play again screen
+            clearScreen()
+            playAgainStage(event)
+            
         pygame.display.flip()
     """
     loadWords() #only do this once at application's start
@@ -153,45 +238,66 @@ def main():
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
-def doGameWon():
+def doGameWon(event):
 
-    print("\nCONGRATULATIONS! YOU WON!!!")
-    print("You correctly guessed " + ''.join(g_GUESSED_WORD))
-    play = doPlayAgain()
-    return play
+    global g_playAgainFlag
+    global g_hangmanFlag
+
+    g_screen.blit(g_screenText["win message"]("CONGRATULATIONS! YOU WON!!!", 1, g_black),(100,100))
+    g_screen.blit(g_screenText["win message"]("You correctly guessed '" + ''.join(g_GUESSED_WORD) + "'", 1, g_black),(100,150))
+    g_screen.blit(g_screenText["enter"]("Press SPACE to continue...", 1, g_black),(100,250))
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_SPACE:
+            g_playAgainFlag = True
+            g_hangmanFlag = False
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
-def doGameOver():
+def doGameOver(event):
 
-    print("\nGame Over. The word was " + ''.join(g_DICT_WORD))
-    play = doPlayAgain()
-    return play
+    global g_playAgainFlag
+    global g_hangmanFlag
+
+    g_screen.blit(g_screenText["lose message"]("Game Over. The word was '" + ''.join(g_DICT_WORD) + "'", 1, g_black),(100,100))
+    g_screen.blit(g_screenText["enter"]("Press SPACE to continue...", 1, g_black),(100,150))
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_SPACE:
+            g_playAgainFlag = True
+            g_hangmanFlag = False
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
-def doPlayAgain():
+def playAgainStage(event):
 
-    play = True
+    g_screen.blit(g_screenText["play again"]("Play again? Y/N... ", 1, g_black),(50,500))
 
-    choice = input("Play again? Y/N... ")
-    if choice == "n" or choice == "N":
-        play = False
-        input("Goodbye!")
+    if event.type == pygame.KEYDOWN:
+        if event.unicode.isalpha():
+            choice = pygame.key.name(event.key)
     
-    return play
+            if choice == "n" or choice == "N":
+                sys.exit()
+                #input("Goodbye!")
+    
+            setFlags(False)
+"""-----------------------------------------------------------------"""
+
+"""-----------------------------------------------------------------"""
+def promptForLetter():
+
+    g_screen.blit(g_screenText["guess letter"]("Please guess a letter: ", 1, g_black),(50,500))
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
 def printWrongGuesses():
 
-    print(''.join(g_GUESSES_LIST) + "\n")
+    g_screen.blit(g_screenText["wrong letters"](''.join(g_GUESSES_LIST), 1, g_black),(375,500))
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
 def printGuessedWord():
 
-    print(''.join(g_GUESSED_WORD), end="                    ")
+    g_screen.blit(g_screenText["word to guess"](''.join(g_GUESSED_WORD), 1, g_black),(375,200))
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
@@ -237,15 +343,18 @@ def addToGuessesList(letter):
 """-----------------------------------------------------------------"""
 def checkLetter(letter):
 
+    global g_NUM_OF_BAD_GUESSES
+
     indices = [i for i, x in enumerate(g_DICT_WORD) if x == letter]
     
     if not indices:
-        return False
+        if letter not in g_GUESSES_LIST:
+            addToGuessesList(letter)
+            g_NUM_OF_BAD_GUESSES += 1
 
     for index in indices:
         g_GUESSED_WORD[index] = letter
 
-    return True
 """-----------------------------------------------------------------"""
 
 if __name__ == '__main__': 
