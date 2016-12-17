@@ -55,7 +55,7 @@ def setFlags(firstTime):
     global g_welcomeFlag #puts player at welcomeStage()
     global g_playFlag #puts player at gameSetupStage()
 
-    if firstTime:
+    if firstTime: #only want to go to welcomeStage if it's player's first time
         g_welcomeFlag = True
         g_playFlag = False
 
@@ -69,7 +69,13 @@ def setFlags(firstTime):
     global g_hangmanFlag #puts player at hangmanStage()
     g_hangmanFlag = False
 
-    global g_playAgainFlag
+    global g_gameWonFlag #puts player at gameWonStage()
+    g_gameWonFlag = False
+
+    global g_gameOverFlag #puts player at gameOverStage()
+    g_gameOverFlag = False
+
+    global g_playAgainFlag #puts player at playAgainStage()
     g_playAgainFlag = False
 """-----------------------------------------------------------------"""
 
@@ -99,7 +105,6 @@ def gameSetupStage(event):
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
-            print("Inside 2nd event")
             g_playFlag = False
             g_hangmanFlag = True
 
@@ -118,32 +123,30 @@ def welcomeStage(currentTime, event):
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_RETURN:
-            print("Inside event")
             g_welcomeFlag = False
             g_playFlag = True
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
 def hangmanStage(event):
+    global g_hangmanFlag
+    global g_gameWonFlag
+    global g_gameOverFlag
 
     printGuessedWord()
     printWrongGuesses() 
     #printHangman() **Uncomment this 
 
     if g_GUESSED_WORD == g_DICT_WORD:
-        clearScreen()
+        g_hangmanFlag = False
+        g_gameWonFlag = True
         #printGuessedWord() **not sure if I'll keep
         #printWrongGuesses() **not sure if I'll keep
-        doGameWon(event)
-        #deleted "play = "
-        #break   
+  
     elif g_NUM_OF_BAD_GUESSES == g_TRIES:
-        clearScreen()
-        printGuessedWord()
-        printWrongGuesses()
-        doGameOver(event)
-        #deleted "play = "       
-        #break
+        g_hangmanFlag = False
+        g_gameOverFlag = True
+
     else:
         promptForLetter()
 
@@ -182,66 +185,29 @@ def main():
             clearScreen()
             hangmanStage(event)
 
+        elif g_gameWonFlag: #game won screen
+            clearScreen()
+            gameWonStage(event)
+
+        elif g_gameOverFlag: #game over screen
+            clearScreen()
+            printGuessedWord()
+            printWrongGuesses()
+            gameOverStage(event)
+
         elif g_playAgainFlag: #play again screen
             clearScreen()
             playAgainStage(event)
             
         pygame.display.flip()
-    """
-    loadWords() #only do this once at application's start
-
-    play = True
-    while play:
-
-        clearScreen()
-
-        print("Hello, and welcome to 'Python Hangman'!")
-        input("Press ENTER to continue...")
-
-        clearScreen()
-
-        setupGlobals()
-
-        print("A random word has been selected...")
-        input("Press ENTER to continue...")
-        
-        global g_NUM_OF_BAD_GUESSES
-
-        while True: 
-
-            clearScreen()
-            printGuessedWord()
-            printWrongGuesses()
-            printHangman()
-
-            letter = input("\nplease guess a letter: ")
-            
-            if not checkLetter(letter):
-                addToGuessesList(letter)
-                g_NUM_OF_BAD_GUESSES += 1 
-
-            if g_GUESSED_WORD == g_DICT_WORD:
-                clearScreen()
-                printGuessedWord()
-                printWrongGuesses()
-                printHangman()
-                play = doGameWon()
-                break   
-            elif g_NUM_OF_BAD_GUESSES == g_TRIES:
-                clearScreen()
-                printGuessedWord()
-                printWrongGuesses()
-                printHangman()
-                play = doGameOver()       
-                break     
-"""
+    
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
-def doGameWon(event):
+def gameWonStage(event):
 
     global g_playAgainFlag
-    global g_hangmanFlag
+    global g_gameWonFlag
 
     g_screen.blit(g_screenText["win message"]("CONGRATULATIONS! YOU WON!!!", 1, g_black),(100,100))
     g_screen.blit(g_screenText["win message"]("You correctly guessed '" + ''.join(g_GUESSED_WORD) + "'", 1, g_black),(100,150))
@@ -249,21 +215,21 @@ def doGameWon(event):
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
             g_playAgainFlag = True
-            g_hangmanFlag = False
+            g_gameWonFlag = False
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
-def doGameOver(event):
+def gameOverStage(event):
 
     global g_playAgainFlag
-    global g_hangmanFlag
+    global g_gameOverFlag
 
     g_screen.blit(g_screenText["lose message"]("Game Over. The word was '" + ''.join(g_DICT_WORD) + "'", 1, g_black),(100,100))
     g_screen.blit(g_screenText["enter"]("Press SPACE to continue...", 1, g_black),(100,150))
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
             g_playAgainFlag = True
-            g_hangmanFlag = False
+            g_gameOverFlag = False
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
