@@ -1,5 +1,12 @@
-#!/usr/bin/python
-import sys, pygame, random
+import sys, os, pygame, random
+
+"""-----------------------------------------------------------------"""
+def resource_path(relative):
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative)
+    return os.path.join(relative)
+"""-----------------------------------------------------------------"""
+
 """-----------------------------------------------------------------"""
 def setupHangmanGlobals():   
 
@@ -82,10 +89,13 @@ def setFlags(firstTime):
 
 """-----------------------------------------------------------------"""
 def loadWords():
+    
+    filename = "Master_Word_List.txt"
+    myWordFile = resource_path(os.path.join('data', filename))
 
     global LINES #a list of all the possible hangman words
 
-    LINES = open("Master_Word_List.txt").readlines()
+    LINES = open(myWordFile).readlines()
 
     LINES = [word.lower().rstrip("\n") for word in LINES]
 """-----------------------------------------------------------------"""
