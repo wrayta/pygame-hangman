@@ -11,10 +11,10 @@ def resourcePath(relative):
 def setupHangmanGlobals():   
 
     global g_tries #how many tries the player gets to guess the word
-    g_tries = 6 
+    g_tries = 7 
 
     global g_dictWord #select random word ALSO needed for 'game over'
-    g_dictWord = list(random.choice(LINES))  
+    g_dictWord = list(random.choice(g_lines))  
 
     global g_guessedWord #word the player sees
     g_guessedWord = []
@@ -30,11 +30,6 @@ def setupHangmanGlobals():
 
 """-----------------------------------------------------------------"""
 def preGameSetup():
-
-    pygame.init()
-    pygame.font.init()
-
-    loadWords()
     
     global g_width
     g_width = 800
@@ -79,16 +74,43 @@ def preGameSetup():
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
-def loadWords():
+def loadResources():
     
     filename = "Master_Word_List.txt"
     myWordFile = resourcePath(os.path.join('data', filename))
 
-    global LINES #a list of all the possible hangman words
+    global g_lines #a list of all the possible hangman words
 
-    LINES = open(myWordFile).readlines()
+    g_lines = open(myWordFile).readlines()
 
-    LINES = [word.lower().rstrip("\n") for word in LINES]
+    g_lines = [word.lower().rstrip("\n") for word in g_lines]
+
+    start = "start.png"
+    startFile = pygame.image.load(os.path.join('data', start))
+
+    try1 = "try1.png"
+    try1File = pygame.image.load(os.path.join('data', try1))
+
+    try2 = "try2.png"
+    try2File = pygame.image.load(os.path.join('data', try2))
+
+    try3 = "try3.png"
+    try3File = pygame.image.load(os.path.join('data', try3))
+
+    try4 = "try4.png"
+    try4File = pygame.image.load(os.path.join('data', try4))
+
+    try5 = "try5.png"
+    try5File = pygame.image.load(os.path.join('data', try5))
+
+    try6 = "try6.png"
+    try6File = pygame.image.load(os.path.join('data', try6))
+
+    try7 = "try7.png"
+    try7File = pygame.image.load(os.path.join('data', try7))
+
+    global g_hangmanDrawings
+    g_hangmanDrawings = [startFile, try1File, try2File, try3File, try4File, try5File, try6File, try7File]
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
@@ -127,9 +149,9 @@ def welcomeStage(event):
 def hangmanStage(event):
     global g_stagePointer
 
+    printHangman() 
     printGuessedWord()
     printWrongGuesses() 
-    #printHangman() **Uncomment this 
 
     if g_guessedWord == g_dictWord:
         g_stagePointer = g_stageString["gameWon"]
@@ -154,6 +176,10 @@ def hangmanStage(event):
 """-----------------------------------------------------------------"""
 def main():
 
+    pygame.init()
+    pygame.font.init()
+
+    loadResources()
     preGameSetup()   
      
     while 1:
@@ -173,10 +199,11 @@ def main():
 def gameWonStage(event):
     global g_stagePointer
 
+    printHangman()
 
-    g_screen.blit(g_screenText["win message"]("CONGRATULATIONS! YOU WON!!!", 1, g_black),(100,100))
-    g_screen.blit(g_screenText["win message"]("You correctly guessed '" + ''.join(g_guessedWord) + "'", 1, g_black),(100,150))
-    g_screen.blit(g_screenText["enter"]("Press SPACE to continue...", 1, g_black),(100,250))
+    g_screen.blit(g_screenText["win message"]("CONGRATULATIONS! YOU WON!!!", 1, g_black),(100,50))
+    g_screen.blit(g_screenText["win message"]("You correctly guessed '" + ''.join(g_guessedWord) + "'", 1, g_black),(100,100))
+    g_screen.blit(g_screenText["enter"]("Press SPACE to continue...", 1, g_black),(100,150))
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
@@ -188,11 +215,12 @@ def gameOverStage(event):
 
     global g_stagePointer
 
+    printHangman() 
     printGuessedWord()
     printWrongGuesses()
 
-    g_screen.blit(g_screenText["lose message"]("Game Over. The word was '" + ''.join(g_dictWord) + "'", 1, g_black),(100,100))
-    g_screen.blit(g_screenText["enter"]("Press SPACE to continue...", 1, g_black),(100,150))
+    g_screen.blit(g_screenText["lose message"]("Game Over. The word was '" + ''.join(g_dictWord) + "'", 1, g_black),(100,50))
+    g_screen.blit(g_screenText["enter"]("Press SPACE to continue...", 1, g_black),(100,100))
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
@@ -233,35 +261,14 @@ def printWrongGuesses():
 """-----------------------------------------------------------------"""
 def printGuessedWord():
     text = g_screenText["word to guess"](''.join(g_guessedWord), 1, g_black)
-    g_screen.blit(text,[g_width / 2 - text.get_rect().width / 2, g_height / 2 - text.get_rect().height / 2])
+    g_screen.blit(text,[g_width / 2 - text.get_rect().width / 2, 150])
 """-----------------------------------------------------------------"""
 
 """-----------------------------------------------------------------"""
 def printHangman():
-    board = [[[], [], []],
-           [[], [], []],
-           [[], [], []]]
 
-    if g_numOfBadGuesses > 0:
-        board[0][1] = '0'
-
-    if g_numOfBadGuesses > 1:
-        board[1][1] = '|'
-
-    if g_numOfBadGuesses > 2:
-        board[2][0] = '/'
-
-    if g_numOfBadGuesses > 3:
-        board[2][2] = '\\'
-
-    if g_numOfBadGuesses > 4:
-        board[1][0] = '-'
-
-    if g_numOfBadGuesses > 5:
-        board[1][2] = '-'
-
-    for cell in board:
-        print(cell)
+    g_screen.blit(g_hangmanDrawings[g_numOfBadGuesses],[g_width / 2 - g_hangmanDrawings[g_numOfBadGuesses].get_rect().width / 2, 
+                  g_height / 2 - g_hangmanDrawings[g_numOfBadGuesses].get_rect().height / 2])
     
 """-----------------------------------------------------------------"""
     
